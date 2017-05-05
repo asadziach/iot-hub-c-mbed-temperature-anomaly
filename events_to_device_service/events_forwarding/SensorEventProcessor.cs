@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TweetSharp;
 
 namespace events_forwarding
 {
@@ -59,6 +60,20 @@ namespace events_forwarding
                     Trace.TraceInformation("Issuing alarm to device: '{0}', from sensor: '{1}'", newSensorEvent.targetalarmdevice, newSensorEvent.dsplalert);
                     Trace.TraceInformation("New Command Parameter: '{0}'", commandParameterNew);
                     await WorkerRole.iotHubServiceClient.SendAsync(newSensorEvent.targetalarmdevice, new Microsoft.Azure.Devices.Message(Encoding.UTF8.GetBytes(commandParameterNew)));
+
+                    // Tweeting here
+                    string consumerKey = ConfigurationManager.AppSettings["Twitter.ConsumerKey"];
+                    string consumerSecret = ConfigurationManager.AppSettings["Twitter.ConsumerSecret"];
+                    string accessToken = ConfigurationManager.AppSettings["Twitter.AccessToken"];
+                    string accessSecret = ConfigurationManager.AppSettings["Twitter.AccessSecret"];
+
+                    // Obtain keys by registering your app on https://dev.twitter.com/apps or https://apps.twitter.com/
+                    var service = new TwitterService(consumerKey, consumerSecret);
+                    service.AuthenticateWith(accessToken, accessSecret);
+                    SendTweetOptions x = new SendTweetOptions();
+                    x.Status = string.Format("Temprature Anomaly detected fom FRDM-K64F! (Auto-generated messsage from Azure Stream Analytics)");
+                    service.SendTweet(x);
+
                 }
                 catch (Exception ex)
                 {
